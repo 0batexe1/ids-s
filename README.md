@@ -1,107 +1,170 @@
-Web Directory and Information Disclosure Scanner
+Proje Hakkında
 
-This script scans a target domain for common web directories, HTTP headers, and information disclosures such as sensitive files, directory listings, or exposed configuration details.
-Features:
+Bu Python script'i, hedef web uygulamaları üzerinde kapsamlı bir bilgi toplama (reconnaissance) ve zafiyet keşfi yapmak için tasarlanmıştır. Belirlenmiş potansiyel yolları (path) tarayarak, HTTP başlıklarında, robots.txt dosyasında ve dizin listelemelerinde olası bilgi sızdırmalarını otomatik olarak kontrol eder. Amacı, sızma testleri ve hata ödülü (bug bounty) avcıları için ilk keşif aşamasını otomatikleştirmek ve görünürdeki zafiyetleri veya hassas bilgileri hızlıca ortaya çıkarmaktır.
+Amaç ve Hedef Kitle
 
-    Path Scanning: Attempts to access a wide variety of common paths like /admin, /login, /backup, etc.
-    robots.txt Scanning: Checks for disallowed paths inside the robots.txt file and adds them to the scan list.
-    HTTP Header Check: Detects headers that might reveal information like server technology or powered-by details.
-    Directory Listing Check: Detects open directory listings that could expose sensitive files.
-    Sensitive Information Check: Searches the response content for keywords like password, secret, config, etc.
+Bu projenin temel amacı, bir web uygulamasının genel güvenlik duruşunu anlamak için kritik ilk adımları atmaktır. Özellikle şu kitlelere hitap eder:
 
-Requirements:
+    Güvenlik Araştırmacıları: Yeni hedefler üzerinde hızlı bir ilk değerlendirme yapmak ve potansiyel zafiyet alanlarını belirlemek için.
+    Sızma Testleri Uzmanları: Kapsamlı bir test sürecinin başlangıcında bilgi toplama aşamasını kolaylaştırmak için.
+    Bug Bounty Avcıları: Uygulamaların açıkta bıraktığı hassas bilgileri veya varsayılan yapılandırma zafiyetlerini (misconfigurations) tespit etmek için.
+    Geliştiriciler: Kendi uygulamalarının dağıtım sonrası maruz kalabileceği bilgi sızdırma risklerini kontrol etmek için.
 
-    Python 3.x
-    requests
-    beautifulsoup4
-    colorama
+Özellikler
 
-Installation:
+    Path Taraması: Web sunucularında yaygın olarak bulunan veya hassas bilgi içerebilecek potansiyel dizinleri ve dosyaları (örn. /admin/, /robots.txt, .env) proaktif olarak tarar.
+    HTTP Başlık Kontrolü: Sunucu ve uygulama versiyon bilgisi gibi açıklayıcı HTTP başlıklarını tespit ederek bilgi sızdırma (information disclosure) zafiyetlerini kontrol eder.
+    robots.txt Analizi: Uygulamanın robots.txt dosyasını çekerek, arama motorlarının dizine eklemesini istemediği (fakat yine de erişilebilir olabilecek) yolları (Disallow direktifleri) otomatik olarak tarama listesine ekler.
+    Dizin Listeleme Kontrolü: Belirtilen yollarda dizin listeleme (directory listing) zafiyetinin olup olmadığını kontrol eder. Bu durum, sunucunun hassas dosya ve dizin yapılarını açığa çıkarmasına neden olabilir.
+    Yanıt İçeriği Bilgi Sızdırma: HTTP yanıtlarının içeriğinde "password", "secret", "key" gibi hassas anahtar kelimeleri arayarak bilgi sızdırma zafiyetlerini tespit etmeye çalışır.
+    Renkli Çıktı: Kullanıcıya daha iyi bir görsel geri bildirim sağlamak ve bulguları vurgulamak için colorama kütüphanesi ile renkli terminal çıktıları sunar.
 
-bash
+Gereklilikler
 
-# Clone the repository
-git clone https://github.com/yourusername/web-directory-scanner.git
-cd web-directory-scanner
+Bu aracı kullanmak için sisteminizde aşağıdaki yazılımların kurulu olması gerekir:
 
-# Install required libraries
-pip install -r requirements.txt
+    Python 3.x: Script Python 3 ile uyumludur.
+    requests kütüphanesi: HTTP istekleri yapmak için. pip install requests komutu ile kurulabilir.
+    colorama kütüphanesi: Terminal çıktılarını renklendirmek için. pip install colorama komutu ile kurulabilir.
+    BeautifulSoup4 kütüphanesi: HTML içeriğini ayrıştırmak ve dizin listelemesi kontrolü yapmak için. pip install beautifulsoup4 komutu ile kurulabilir.
 
-How to Use:
+Kurulum ve Kullanım
 
-    Run the script:
+    Gerekli Kütüphaneleri Kurun:
+    Script'i çalıştırmadan önce, Python ortamınızda gerekli kütüphanelerin kurulu olduğundan emin olun:
+    Bash
 
-bash
+pip install requests colorama beautifulsoup4
 
-python scanner.py
+Script'i İndirin:
+Bu projenin GitHub deposundan recon_scanner.py (veya script'inizin adı ne ise) dosyasını indirin veya kopyalayın.
 
-    Enter the target domain, e.g., https://example.com.
-    The script will scan the domain and output any findings such as information disclosures or directory listings.
+Script'i Çalıştırın:
+Terminalinizde script'in bulunduğu dizine gidin ve aşağıdaki komutu çalıştırın. Script sizden hedef domaini isteyecektir.
+Bash
 
-Example Output:
+    python recon_scanner.py
 
-bash
+    İstendiğinde hedef domaini girin:
 
-[*] Scanning: https://example.com/admin/ - HTTP Headers - 200
-    [!] Information Disclosure Detected in Headers: X-Powered-By: PHP/7.4.3
-    [!] Directory Listing Enabled: https://example.com/admin/
-[*] Scanning: https://example.com/.git/ - HTTP Headers - 403
+    Tarama yapmak istediğiniz domaini girin (ör: https://example.com): https://target.com
 
-Contribution:
+Bulguları Değerlendirme
 
-Feel free to fork the repository, make improvements, and submit pull requests. All contributions are welcome!
+Tarama tamamlandığında, terminalde potansiyel bilgi sızdırma zafiyetlerini ve diğer bulguları renkli olarak göreceksiniz.
+
+    [!] Information Disclosure Detected in Headers: mesajı, sunucu veya uygulama hakkında detaylı bilgilerin HTTP başlıkları aracılığıyla sızdırıldığını gösterir. Bu bilgiler, saldırganlar için zafiyet avı sırasında değerli ipuçları sağlayabilir.
+    [!] Dizin Listeleme Açık: mesajı, sunucunun bir dizindeki tüm dosya ve alt dizinleri listelediğini belirtir. Bu durum, hassas dosyalara veya uygulama yapısına dair bilgilere yetkisiz erişime yol açabilir.
+    [!] Information Disclosure Detected in Response: mesajı, sayfa içeriğinde hassas anahtar kelimelerin bulunduğunu gösterir. Bu, yanlış yapılandırılmış bir hata sayfası, debug modu veya yanlışlıkla herkese açık bırakılan bir yapılandırma dosyası olabilir.
+
+Önemli Not: Bu tarayıcı bir otomatik araç olup, sonuçlar hatalı pozitifler (false positives) içerebilir. Tespit edilen her bulguyu manuel olarak doğrulamanız ve potansiyel etkisini teyit etmeniz kritik öneme sahiptir. Örneğin, bir "password" kelimesi bir blog yazısında da geçebilir; önemli olan, bu kelimenin hassas bir bağlamda (örn. yapılandırma dosyası, hata mesajı) ortaya çıkmasıdır.
+Önemli Etik Not
+
+Bu araç, web uygulamalarındaki güvenlik zafiyetlerini tespit etmek için tasarlanmıştır. Bu tür araçların yalnızca yasal ve etik sınırlar içinde kullanılması büyük önem taşımaktadır. Hedef sistemler üzerinde test yapmadan önce kesinlikle sahibinden yazılı izin almalısınız. İzinsiz tarama veya sömürü girişimleri yasa dışıdır ve ciddi hukuki sonuçları olabilir. Bu aracın kötüye kullanımıyla ilgili herhangi bir sorumluluk kabul edilmez.
+Geliştirme Önerileri
+
+Bu script, bilgi toplama ve keşif konusunda güçlü bir başlangıç noktası sunar. Gelecekteki geliştirmeler için bazı fikirler:
+
+    Daha Kapsamlı Path Listeleri: Farklı teknolojilere (örneğin Java, Node.js, spesifik CMS'ler) özel daha geniş ve hedefli path listeleri entegre edin. SecLists gibi kaynaklar çok faydalıdır.
+    Subdomain Entegrasyonu: Mevcut alt alan adı tarayıcınızla entegre ederek, keşfedilen her alt alan adı üzerinde bu taramayı çalıştırın.
+    JavaScript Analizi: JavaScript dosyalarını ayrıştırarak API anahtarları, gizli endpoint'ler veya diğer hassas bilgileri tespit etmeye çalışın.
+    Hata Sayfası Analizi: Farklı HTTP hata kodlarını (örn. 401, 403, 500) tetikleyerek, sunucunun varsayılan hata sayfalarında bilgi sızdırması olup olmadığını kontrol edin.
+    Versiyon Tespiti: Başlıklardan veya sayfa içeriğinden tespit edilen sunucu/uygulama versiyonlarına göre bilinen zafiyetleri (CVE'ler) kontrol eden bir modül ekleyin.
+    Rate Limiting ve Gecikme: Hedef sunucuya aşırı yüklenmeyi önlemek ve tespit edilmemek için istekler arasına gecikmeler ekleyin.
+    Gelişmiş Raporlama: Bulguları daha yapılandırılmış bir şekilde (JSON, HTML) raporlama yeteneği ekleyin.
+
+Katkıda Bulunma
+
+Proje daha fazla geliştirmeye açık! Yeni path'ler eklemek, tespit mantığını iyileştirmek, hata yönetimi geliştirmeleri yapmak veya yeni özellikler önermek isterseniz, geri bildirimleriniz, hata raporlarınız ve katkılarınız her zaman açığız. Bir çekme isteği (pull request) göndermeden önce lütfen mevcut sorunları kontrol edin veya yeni bir sorun açın.
+Lisans
+
+Bu proje MIT Lisansı altında yayınlanmıştır. Daha fazla bilgi için 'LICENSE' dosyasına bakın.
+İletişim
+
+Sorularınız, önerileriniz veya işbirliği talepleriniz için bana github.com/0batexe1 üzerinden ulaşabilirsiniz.
 
 
+About The Project
 
-Web Dizin ve Bilgi Sızdırma Tarayıcı
+This Python script is designed to perform comprehensive reconnaissance and vulnerability discovery on target web applications. It automatically checks for potential information disclosure in HTTP headers, robots.txt files, and directory listings by scanning a predefined list of common and sensitive paths. Its purpose is to automate the initial discovery phase for penetration testers and bug bounty hunters, quickly revealing visible vulnerabilities or sensitive information.
+Purpose and Target Audience
 
-Bu Python betiği, hedef domain üzerinde yaygın web dizinlerini, HTTP başlıklarını ve potansiyel bilgi sızdırmalarını (gizli dosyalar, açık dizin listeleme, yapılandırma bilgileri) tarar.
-Özellikler:
+The primary goal of this project is to take critical first steps in understanding a web application's overall security posture. It particularly targets the following audiences:
 
-    Dizin Taraması: /admin, /login, /backup gibi yaygın yolları erişmeyi dener.
-    robots.txt Taraması: robots.txt dosyasındaki yasaklanan yolları tespit eder ve tarama listesine ekler.
-    HTTP Başlık Kontrolü: Sunucu teknolojisi veya kullanılan altyapıyı açığa çıkarabilecek başlıkları kontrol eder.
-    Dizin Listeleme Kontrolü: Açık dizin listelemelerini tespit eder.
-    Hassas Bilgi Kontrolü: Yanıt içeriğinde password, secret, config gibi anahtar kelimeleri arar.
+    Security Researchers: For conducting a rapid initial assessment on new targets and identifying potential areas of vulnerability.
+    Penetration Testers: For streamlining the information gathering phase at the start of a comprehensive testing process.
+    Bug Bounty Hunters: For detecting sensitive information exposed by applications or identifying default configuration vulnerabilities (misconfigurations).
+    Developers: For checking their own applications against information disclosure risks that might arise post-deployment.
 
-Gereksinimler:
+Features
 
-    Python 3.x
-    requests
-    beautifulsoup4
-    colorama
+    Path Scanning: Proactively scans for common and potentially sensitive directories and files on web servers (e.g., /admin/, /robots.txt, .env).
+    HTTP Header Control: Detects descriptive HTTP headers, such as server and application version information, to check for information disclosure vulnerabilities.
+    robots.txt Analysis: Fetches the application's robots.txt file and automatically adds paths that search engines are disallowed from indexing (but might still be accessible) to the scanning list.
+    Directory Listing Check: Verifies whether directory listing vulnerabilities exist on specified paths. This condition can lead to unauthorized access to sensitive files and directory structures.
+    Response Content Information Disclosure: Searches for sensitive keywords like "password," "secret," "key," and "token" within the content of HTTP responses to identify information disclosure vulnerabilities.
+    Colored Output: Provides colored terminal output using the colorama library to offer better visual feedback to the user and highlight findings.
 
-Kurulum:
+Requirements
 
-bash
+To use this tool, your system needs to have the following software installed:
 
-# Depoyu klonlayın
-git clone https://github.com/yourusername/web-directory-scanner.git
-cd web-directory-scanner
+    Python 3.x: The script is compatible with Python 3.
+    requests library: For making HTTP requests. Install it using pip install requests.
+    colorama library: For coloring terminal output. Install it using pip install colorama.
+    BeautifulSoup4 library: For parsing HTML content and checking for directory listings. Install it using pip install beautifulsoup4.
 
-# Gerekli kütüphaneleri yükleyin
-pip install -r requirements.txt
+Installation and Usage
 
-Kullanım:
+    Install Required Libraries:
+    Before running the script, ensure the necessary libraries are installed in your Python environment:
+    Bash
 
-    Betiği çalıştırın:
+pip install requests colorama beautifulsoup4
 
-bash
+Download the Script:
+Download or copy the recon_scanner.py file (or whatever your script is named) from this project's GitHub repository.
 
-python scanner.py
+Run the Script:
+Navigate to the directory where the script is located in your terminal and run the following command. The script will ask you for the target domain.
+Bash
 
-    Hedef domaini girin, örneğin: https://example.com.
-    Betik, domain üzerinde tarama yapacak ve bilgi sızıntıları ya da dizin listelemelerini raporlayacaktır.
+    python recon_scanner.py
 
-Örnek Çıktı:
+    Enter the target domain when prompted:
 
-bash
+    Tarama yapmak istediğiniz domaini girin (ör: https://example.com): https://target.com
 
-[*] Tarama: https://example.com/admin/ - HTTP Başlıkları - 200
-    [!] Bilgi Sızdırma Tespit Edildi: X-Powered-By: PHP/7.4.3
-    [!] Dizin Listeleme Açık: https://example.com/admin/
-[*] Tarama: https://example.com/.git/ - HTTP Başlıkları - 403
+Evaluating Findings
 
-Katkı:
+Once the scan is complete, you'll see potential information disclosure vulnerabilities and other findings highlighted in color in your terminal.
 
-Depoyu forklayabilir, iyileştirmeler yapabilir ve pull request gönderebilirsiniz. Tüm katkılar memnuniyetle karşılanır!
+    The message [!] Information Disclosure Detected in Headers: indicates that detailed information about the server or application is being leaked through HTTP headers. This information can provide valuable clues for attackers during vulnerability hunting.
+    The message [!] Dizin Listeleme Açık: (Directory Listing Open) indicates that the server is listing all files and subdirectories within a directory. This can lead to unauthorized access to sensitive files or information about the application's structure.
+    The message [!] Information Disclosure Detected in Response: indicates that sensitive keywords were found within the page content. This could be due to a misconfigured error page, a debug mode, or a configuration file accidentally left public.
+
+Important Note: This scanner is an automated tool, and results may contain false positives. It's critical to manually verify each detected finding and confirm its potential impact. For instance, the word "password" might appear in a blog post; what matters is whether this word appears in a sensitive context (e.g., a configuration file, an error message).
+Important Ethical Note
+
+This tool is designed to identify security vulnerabilities in web applications. It is of utmost importance that such tools are used strictly within legal and ethical boundaries. You must obtain explicit written permission from the owner before conducting any tests on target systems. Unauthorized scanning or exploitation attempts are illegal and can lead to severe legal consequences. No responsibility is assumed for any misuse of this tool.
+Improvement Suggestions
+
+This script provides a strong starting point for information gathering and reconnaissance. Here are some ideas for future enhancements:
+
+    More Comprehensive Path Lists: Integrate broader and more targeted path lists specific to different technologies (e.g., Java, Node.js, specific CMSs). Resources like SecLists are very useful here.
+    Subdomain Integration: Integrate with your existing subdomain scanner to run this reconnaissance scan on every discovered subdomain.
+    JavaScript Analysis: Parse JavaScript files to identify API keys, hidden endpoints, or other sensitive information.
+    Error Page Analysis: Trigger different HTTP error codes (e.g., 401, 403, 500) to check if the server's default error pages leak information.
+    Version Detection: Add a module to check for known vulnerabilities (CVEs) based on server/application versions identified from headers or page content.
+    Rate Limiting and Delay: Introduce delays between requests to prevent overwhelming the target server and to avoid detection.
+    Advanced Reporting: Add the ability to report findings in a more structured format (JSON, HTML).
+
+Contributing
+
+The project is open for further development! If you'd like to add new paths, improve detection logic, enhance error handling, or propose new features, your feedback, bug reports, and contributions are always welcome. Please check for existing issues or open a new one before submitting a pull request.
+License
+
+This project is licensed under the MIT License. See the 'LICENSE' file for more details.
+Contact
+
+For any questions, suggestions, or collaboration inquiries, feel free to reach out to me via github.com/0batexe1.
